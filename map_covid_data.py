@@ -17,39 +17,28 @@ epicenterPoint = None
 finalDate = None
 
 
-def rcolor():
-    return (random.random(), random.random(), random.random())
-
-def fcolor2Hex(tcolour):
-    return '#%02x%02x%02x'%(int(tcolour[0]*255), int(tcolour[1]*255), int(tcolour[2]*255))
-
-def clamp(value, minv=0, maxv=1): 
-    return max(min(value, maxv), minv)
-
 def calculateTotals(countries):
     for country in countries.values():
         if country['data']:
-            totalActiveData = {day:0 for day in country['data']}
+            totalData = {day:0 for day in country['data']}
             break
     
-    for day in totalActiveData:
+    for day in totalData:
         total = 0
         for country in countries.values():
             if country['data']:
                 total += country['data'][day]
-        totalActiveData[day] = total
+        totalData[day] = total
     
     global finalDate
     finalDate = date.fromisoformat(day)
     
-    return totalActiveData
+    return totalData
 
 def calculateEpicenter(day):
     pass
 
-def plotFrame(day): #, totalActiveData, countriesData, countriesRecords, countriesFeatures, ax):
-    
-    # day = datetime.date.fromordinal(DAY0 + frame).isoformat()
+def plotFrame(day):                                                         # Function to update plot
     epicenterX, epicenterY, epicenterZ = 0.0, 0.0, 0.0
     lon, lat = 0.0, 0.0
     dayKey = day.isoformat()
@@ -57,10 +46,9 @@ def plotFrame(day): #, totalActiveData, countriesData, countriesRecords, countri
     for code in countriesData:
         concentration = 0
         if countriesData[code]['data']:
-            if totalActiveData[dayKey]>0:
-                concentration = countriesData[code]['data'][dayKey] / totalActiveData[dayKey]
-                # color = (1.0, clamp(1.0 - concentration), clamp(1.0 - concentration))#)fcolor2Hex(
-                color = colorMap(concentration)
+            if totalData[dayKey]>0:
+                concentration = countriesData[code]['data'][dayKey] / totalData[dayKey]
+                color = colorMap(concentration)                             # Color is weighted 
             else:
                 color = 'white'
             
@@ -68,19 +56,12 @@ def plotFrame(day): #, totalActiveData, countriesData, countriesRecords, countri
             color = 'gray'
         
         countriesFeatures[code]._kwargs['facecolor'] = color
-        # countriesFeatures[code].remove()
-        # countriesFeatures[code] = ax.add_geometries([countriesRecords[code].geometry],
-                                                # ccrs.PlateCarree(), facecolor=color,
-                                                # label = code)
-        
-        # theta += countriesRecords[code].geometry.centroid.x * concentration
-        # phi += countriesRecords[code].geometry.centroid.y * concentration
 
         lon = math.radians(countriesRecords[code].geometry.centroid.x)
         lat = math.radians(countriesRecords[code].geometry.centroid.y)
 
-        epicenterX += math.cos(lat) * math.cos(lon) * concentration
-        epicenterY += math.cos(lat) * math.sin(lon) * concentration
+        epicenterX += math.cos(lat) * math.cos(lon) * concentration         # Epicenter is the weighted average centroid
+        epicenterY += math.cos(lat) * math.sin(lon) * concentration         # of all countries 
         epicenterZ += math.sin(lat) * concentration
     
     lat = math.degrees(math.asin(epicenterZ))
@@ -88,68 +69,70 @@ def plotFrame(day): #, totalActiveData, countriesData, countriesRecords, countri
 
     global epicenterLine
     line = epicenterLine.get_data()
-    epicenterLine.remove()
+    epicenterLine.remove()                                                   # Update line
     epicenterLine, = plt.plot(plt.np.append(line[0], lon), plt.np.append(line[1], lat), '--', c='black')
 
     global epicenterPoint
     if epicenterPoint:
-        epicenterPoint.remove()
-    epicenterPoint, = plt.plot(lon, lat, markersize=4, marker='o', color='red')
+        epicenterPoint.remove()                                              # Update epicenter
+    epicenterPoint, = plt.plot(lon, lat, markersize= 5, marker='o', color='red', label='Epicenter')
     
-    plt.title(day.strftime('Date: %b %d %Y'), fontsize=14, fontweight='bold')
-    
-    print('\rDate:', day.strftime('%b %d %Y'), end='\t')
+    plt.title(day.strftime('Date: %d %b %Y'), fontsize=16, fontweight='bold')
+    # plt.legend(handles=[epicenterPoint], loc='lower right')
+    print('\rDate:', day.strftime('%d %b %Y'), end='\t')
     print('Epicenter: (%.2f,%.2f) (%.2f,%.2f,%.2f)'%(lon, lat, epicenterX, epicenterY, epicenterZ), end='')
 
 
-# DAY0 = datetime.date.fromisoformat('2020-01-15').toordinal()
+# main
 
-parser = argparse.ArgumentParser()
-parser.add_argument('data_type', choices=['active', 'new', 'death'], default='active', const='active', nargs='?')
+parser = argparse.ArgumentParser()                                          # Parsing arguments
+parser.add_argument('data_type', choices=['active', 'new'], default='active', const='active', nargs='?')
 parser.add_argument('-s', action='store_true', dest='save')
 args = parser.parse_args()
 
 countriesDataFile = 'countries_%s_data.json'%args.data_type
 
-f = open(countriesDataFile)
+f = open(countriesDataFile)                                                 # Loading collected Covid data
 countriesData = json.load(f)
 f.close()
 print(len(countriesData), ' countries loaded from', countriesDataFile)
 
-totalActiveData = calculateTotals(countriesData)
-
+totalData = calculateTotals(countriesData)
+                                                                            # Loading countries info (geometry, centroid, etc)
 countriesRecords = {country.attributes['ADM0_A3'] : country for country in shpreader.Reader(shpreader.natural_earth(resolution='110m', category='cultural', name='admin_0_countries')).records()}
 
-countriesFeatures = {} # cartopy.mpl.feature_artist.FeatureArtist
-# cartopy.feature.Feature
+countriesFeatures = {}                                                      # cartopy.mpl.feature_artist.FeatureArtist
 
-# matplotlib.use('qt4agg')
-fig = plt.figure(figsize=(12.5, 10))
+fig = plt.figure(figsize=(13.9, 9.5))
 
-ax = plt.axes(projection=ccrs.PlateCarree()) # cartopy.mpl.geoaxes.GeoAxes.add_feature
+ax = plt.axes(projection=ccrs.PlateCarree())                                # Setting up projection
 ax.set_global()
 ax.add_feature(cartopy.feature.OCEAN)
 ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.COASTLINE)
-# ax.margins(x=0, y=0)
-# ax.add_feature(cartopy.feature.Feature(ccrs.PlateCarree(), 0.0, 0.0, markersize=2, marker='o'))
 
-
-colorNorm = mpl.colors.Normalize(vmin=0, vmax=100)
+colorNorm = mpl.colors.Normalize(vmin=0, vmax=100)                          # Setting up colorbar and legend
 colorMap = mpl.cm.get_cmap('afmhot_r')
 sm = plt.cm.ScalarMappable(cmap=colorMap, norm=colorNorm)
 sm._A=[]
-colorbar = plt.colorbar(sm, ax=ax, orientation='horizontal', shrink=0.5)#, fraction=0.046
+colorbar = plt.colorbar(sm, ax=ax, orientation='horizontal', shrink=0.5, pad=0.03)
 if args.data_type=='active':
-    colorbar.set_label('% of global active cases', fontsize=14)
-    fig.suptitle('Active Covid-19 Cases', fontsize=18, fontweight='bold')
+    colorbar.set_label('% of global active cases', fontsize=16)
+    fig.suptitle('Active Covid-19 Cases', fontsize=20, fontweight='bold')
 elif args.data_type=='new':
-    colorbar.set_label('% of global daily new cases', fontsize=14)
-    fig.suptitle('Daily new Covid-19 Cases', fontsize=18, fontweight='bold')
-plt.tight_layout(pad=0.1)
+    colorbar.set_label('% of global daily new cases', fontsize=16)
+    fig.suptitle('Daily new Covid-19 Cases', fontsize=20, fontweight='bold')
+
+epicenterPoint = plt.scatter(0, 0, marker='o', color='red', label='Epicenter', s=50)
+patch = mpl.patches.Patch(color='grey', label='Missing data')
+plt.legend(handles=[epicenterPoint, patch], loc='lower right',fontsize=14)
+# plt.legend()
+epicenterPoint.remove()
+epicenterPoint = None
+plt.tight_layout()
 
 nCountries = 0
-for code in countriesData:
+for code in countriesData:                                                  # Add country geometries
     if countriesData[code]['data']:
         color = 'white'
         nCountries += 1
@@ -161,34 +144,21 @@ for code in countriesData:
                                                 label = code)
 
 epicenterLine, = plt.plot([], [])
-# print(epicenter, epicenter.get_data())#, dir(epicenter), type(epicenter))
-
-# print(countriesRecords['BRA'].geometry.centroid.xy)
-# plotFrame(date(2020, 3, 16))
-# plt.draw()
-# plt.waitforbuttonpress(0)
-
-# plotFrame(date(2020, 7, 15))
-# plt.draw()
-# plt.waitforbuttonpress(0)
-# print()
-# exit()
 
 if args.data_type=='new':
     startDate = date(2020, 1, 31)
 else:
     startDate = date(2020, 1, 22)
 # finalDate = 
-
+                                                                            # Setting date range
 dates = [date.fromordinal(i) for i in range(startDate.toordinal(), finalDate.toordinal())]
 
-ani = animation.FuncAnimation(  fig, plotFrame, frames=dates,
-                                # fargs=(totalActiveData, countriesData, countriesRecords, countriesFeatures, ax),
+ani = animation.FuncAnimation(  fig, plotFrame, frames=dates,               # Animate map
                                 interval=200, blit=False)
 
 
 if args.save:
-    ani.save('active_corona.mp4')
+    ani.save('covid_epicenter_%s.mp4'%args.data_type)                       # Save to file
 else:
     plt.show()
 print()
