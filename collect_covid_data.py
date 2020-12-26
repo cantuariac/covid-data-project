@@ -58,8 +58,8 @@ def getCountryData(path, data_type='active'):
 
 def main():
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('data_type', choices=['active', 'new', 'death'], default='active', const='active', nargs='?')
+    parser = argparse.ArgumentParser(description='Parses Covid-19 data from the web and saves in json file')
+    parser.add_argument('data_type', choices=['active', 'new'], default='active', const='active', nargs='?', help='data type to be collected')
     args = parser.parse_args()
 
     countriesListFile = 'countries_list.json'         #os.path.dirname(__file__)
@@ -69,6 +69,11 @@ def main():
     countriesList = json.load(f)
     f.close()
     print(len(countriesList), ' countries loaded from', countriesListFile)
+
+    if args.data_type == 'active':
+        print('Collecting active Covid-19 cases data')
+    elif args.data_type == 'new':
+        print('Collecting new Covid-19 cases data')
 
     progressBar = ProgressBarThread(2, 10)
     progressBar.start()

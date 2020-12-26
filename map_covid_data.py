@@ -11,6 +11,7 @@ import random
 from datetime import date
 import math
 import argparse
+import itertools
 
 epicenterLine = None
 epicenterPoint = None
@@ -70,14 +71,14 @@ def plotFrame(day):                                                         # Fu
     global epicenterLine
     line = epicenterLine.get_data()
     epicenterLine.remove()                                                   # Update line
-    epicenterLine, = plt.plot(plt.np.append(line[0], lon), plt.np.append(line[1], lat), '--', c='black')
+    epicenterLine, = plt.plot(plt.np.append(line[0], lon), plt.np.append(line[1], lat), '--', c='black', linewidth=5, alpha=0.5)
 
     global epicenterPoint
     if epicenterPoint:
         epicenterPoint.remove()                                              # Update epicenter
-    epicenterPoint, = plt.plot(lon, lat, markersize= 5, marker='o', color='red', label='Epicenter')
+    epicenterPoint, = plt.plot(lon, lat, markersize= 10, marker='o', color='red', label='Epicenter')
     
-    plt.title(day.strftime('Date: %d %b %Y'), fontsize=16, fontweight='bold')
+    plt.title(day.strftime('Date: %d %b %Y'), fontsize=20, fontweight='bold')
     # plt.legend(handles=[epicenterPoint], loc='lower right')
     print('\rDate:', day.strftime('%d %b %Y'), end='\t')
     print('Epicenter: (%.2f,%.2f) (%.2f,%.2f,%.2f)'%(lon, lat, epicenterX, epicenterY, epicenterZ), end='')
@@ -85,9 +86,10 @@ def plotFrame(day):                                                         # Fu
 
 # main
 
-parser = argparse.ArgumentParser()                                          # Parsing arguments
-parser.add_argument('data_type', choices=['active', 'new'], default='active', const='active', nargs='?')
-parser.add_argument('-s', action='store_true', dest='save')
+parser = argparse.ArgumentParser(description='Plots Covid-19 data from json file on a map')                                          # Parsing arguments
+parser.add_argument('data_type', choices=['active', 'new'], default='active',
+                    const='active', nargs='?', help= 'data type to be mapped')
+parser.add_argument('-s', action='store_true', dest='save', help='save animation in file')
 args = parser.parse_args()
 
 countriesDataFile = 'countries_%s_data.json'%args.data_type
@@ -117,15 +119,15 @@ sm = plt.cm.ScalarMappable(cmap=colorMap, norm=colorNorm)
 sm._A=[]
 colorbar = plt.colorbar(sm, ax=ax, orientation='horizontal', shrink=0.5, pad=0.03)
 if args.data_type=='active':
-    colorbar.set_label('% of global active cases', fontsize=16)
-    fig.suptitle('Active Covid-19 Cases', fontsize=20, fontweight='bold')
+    colorbar.set_label('% of global active cases', fontsize=20)
+    fig.suptitle('Active Covid-19 Cases', fontsize=26, fontweight='bold')
 elif args.data_type=='new':
-    colorbar.set_label('% of global daily new cases', fontsize=16)
-    fig.suptitle('Daily new Covid-19 Cases', fontsize=20, fontweight='bold')
+    colorbar.set_label('% of global daily new cases', fontsize=20)
+    fig.suptitle('Daily new Covid-19 Cases', fontsize=26, fontweight='bold')
 
-epicenterPoint = plt.scatter(0, 0, marker='o', color='red', label='Epicenter', s=50)
+epicenterPoint = plt.scatter(0, 0, marker='o', color='red', label='Epicenter', s=100)
 patch = mpl.patches.Patch(color='grey', label='Missing data')
-plt.legend(handles=[epicenterPoint, patch], loc='lower right',fontsize=14)
+plt.legend(handles=[epicenterPoint, patch], loc='lower right',fontsize=20)
 # plt.legend()
 epicenterPoint.remove()
 epicenterPoint = None
@@ -149,16 +151,25 @@ if args.data_type=='new':
     startDate = date(2020, 1, 31)
 else:
     startDate = date(2020, 1, 22)
-# finalDate = 
+finalDate = date(2020, 3, 22)
                                                                             # Setting date range
-dates = [date.fromordinal(i) for i in range(startDate.toordinal(), finalDate.toordinal())]
+# dates = [date.fromordinal(i) for i in range(startDate.toordinal(), finalDate.toordinal())]
+ndays = finalDate.toordinal()-startDate.toordinal()
+dates = list(itertools.chain.from_iterable([[date.fromordinal(startDate.toordinal()+ i)]*10 for i in range(ndays)]))
+
 
 ani = animation.FuncAnimation(  fig, plotFrame, frames=dates,               # Animate map
-                                interval=200, blit=False)
+                                interval=20, blit=False)
 
 
 if args.save:
-    ani.save('covid_epicenter_%s.mp4'%args.data_type)                       # Save to file
+    
+    if args.data_type=='active':
+        t='Active Covid-19 Cases'
+    elif args.data_type=='new':
+        t='Daily new Covid-19 Cases'
+    ani.save('covid_epicenter_%s.mp4'%args.data_type, bitrate=1000,        # Save to file
+                metadata=dict(title=t, artist='cantuariac'))
 else:
     plt.show()
 print()
