@@ -151,7 +151,7 @@ if args.data_type=='new':
     startDate = date(2020, 1, 31)
 else:
     startDate = date(2020, 1, 22)
-finalDate = date(2020, 3, 22)
+# finalDate = date(2020, 3, 22)
                                                                             # Setting date range
 # dates = [date.fromordinal(i) for i in range(startDate.toordinal(), finalDate.toordinal())]
 ndays = finalDate.toordinal()-startDate.toordinal()
