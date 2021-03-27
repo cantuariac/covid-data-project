@@ -148,7 +148,7 @@ for code in countriesData:                                                  # Ad
 epicenterLine, = plt.plot([], [])
 
 if args.data_type=='new':
-    startDate = date(2020, 1, 31)
+    startDate = date(2020, 12, 1)
 else:
     startDate = date(2020, 1, 22)
 # finalDate = date(2020, 3, 22)
@@ -159,7 +159,7 @@ dates = list(itertools.chain.from_iterable([[date.fromordinal(startDate.toordina
 
 
 ani = animation.FuncAnimation(  fig, plotFrame, frames=dates,               # Animate map
-                                interval=20, blit=False)
+                                interval=5, blit=False)
 
 
 if args.save:

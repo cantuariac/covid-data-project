@@ -43,7 +43,7 @@ def getCountryData(path, data_type='active'):
 
     for i in range(len(dates)):
         dateStr = datetime.datetime.strptime(
-            dates[i]+' 2020', '%b %d %Y').date().isoformat()
+            dates[i], '%b %d, %Y').date().isoformat()
         if data[i] == None:
             dataByDate[dateStr] = 0
         else:
@@ -89,7 +89,7 @@ def main():
             else:
                 raise Exception('Missing link')
         except Exception as e:
-            progressBar.print(countriesList[code]['name'], 'collection fail:', e)
+            progressBar.print(countriesList[code]['name'], 'collection fail:', e.args)
             countriesList[code]['data'] = None
         else:
             countriesList[code]['data'] = dataByOrdinalDate
