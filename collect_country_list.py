@@ -13,7 +13,7 @@ import cartopy.io.shapereader as shpreader
 
 
 # sys.path.append('./..')
-from useless.loading import ProgressBarThread
+# from useless.loading import ProgressBarThread
 
 
 COVID_URL = 'https://www.worldometers.info/coronavirus/'

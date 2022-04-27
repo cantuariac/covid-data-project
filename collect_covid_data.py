@@ -11,7 +11,7 @@ import cartopy.io.shapereader as shpreader
 
 
 # sys.path.append('./..')
-from useless.loading import ProgressBarThread
+# from useless.loading import ProgressBarThread
 
 COVID_URL = 'https://www.worldometers.info/coronavirus/'
 
@@ -75,8 +75,8 @@ def main():
     elif args.data_type == 'new':
         print('Collecting new Covid-19 cases data')
 
-    progressBar = ProgressBarThread(2, 10)
-    progressBar.start()
+    # progressBar = ProgressBarThread(2, 10)
+    # progressBar.start()
 
 
     for i, code in enumerate(countriesList):
@@ -89,20 +89,20 @@ def main():
             else:
                 raise Exception('Missing link')
         except Exception as e:
-            progressBar.print(countriesList[code]['name'], 'collection fail:', e.args)
+            print(countriesList[code]['name'], 'collection fail:', e.args)
             countriesList[code]['data'] = None
         else:
             countriesList[code]['data'] = dataByOrdinalDate
             # progressBar.print(countriesList[code]['name'], 'data collected.             ')
         
-        progressBar.set_progress((i+1)/len(countriesList))
+        # progressBar.set_progress((i+1)/len(countriesList))
     
     for code in countriesList:                              # setting Antarctica data to 0
         if countriesList[code]['data']:                   # so it shows as white on the map
             countriesList['ATA']['data'] = {d : 0 for d in countriesList[code]['data']}
             break
 
-    progressBar.join()
+    # progressBar.join()
     print('Collection complete!')
 
     f = open(countriesDataFile, 'w')

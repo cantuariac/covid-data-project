@@ -151,15 +151,14 @@ if args.data_type=='new':
     startDate = date(2020, 12, 1)
 else:
     startDate = date(2020, 1, 22)
-# finalDate = date(2020, 3, 22)
+# finalDate = date(2020, 5, 22)
                                                                             # Setting date range
 # dates = [date.fromordinal(i) for i in range(startDate.toordinal(), finalDate.toordinal())]
 ndays = finalDate.toordinal()-startDate.toordinal()
-dates = list(itertools.chain.from_iterable([[date.fromordinal(startDate.toordinal()+ i)]*10 for i in range(ndays)]))
-
+dates = list(itertools.chain.from_iterable([[date.fromordinal(startDate.toordinal()+ i)]*1 for i in range(ndays)]))
 
 ani = animation.FuncAnimation(  fig, plotFrame, frames=dates,               # Animate map
-                                interval=5, blit=False)
+                                interval=50, blit=False)
 
 
 if args.save:
@@ -168,7 +167,7 @@ if args.save:
         t='Active Covid-19 Cases'
     elif args.data_type=='new':
         t='Daily new Covid-19 Cases'
-    ani.save('covid_epicenter_%s.mp4'%args.data_type, bitrate=1000,        # Save to file
+    ani.save('covid_epicenter_%s.mp4'%args.data_type, bitrate=10000,        # Save to file
                 metadata=dict(title=t, artist='cantuariac'))
 else:
     plt.show()
