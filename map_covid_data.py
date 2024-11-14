@@ -115,6 +115,7 @@ ax.add_feature(cartopy.feature.COASTLINE)
 
 colorNorm = mpl.colors.Normalize(vmin=0, vmax=100)                          # Setting up colorbar and legend
 colorMap = mpl.cm.get_cmap('afmhot_r')
+#colorMap = matplotlib.colormaps['afmhot_r']
 sm = plt.cm.ScalarMappable(cmap=colorMap, norm=colorNorm)
 sm._A=[]
 colorbar = plt.colorbar(sm, ax=ax, orientation='horizontal', shrink=0.5, pad=0.03)

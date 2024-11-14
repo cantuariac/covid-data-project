@@ -7,6 +7,11 @@ Tools:
 - Python
 - matplotlib
 - cartopy
+- ffmpeg
+
+# Exemple
+
+<video src="covid_epicenter_active.mp4" controls></video>
 
 # Usage
 
