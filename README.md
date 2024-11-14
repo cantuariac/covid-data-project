@@ -11,7 +11,7 @@ Tools:
 
 # Exemple
 
-<video src="covid_epicenter_active.mp4" controls></video>
+https://github.com/user-attachments/assets/6f1df3f7-fdb8-4523-8d9f-4988c3dbbc6d
 
 # Usage
 
